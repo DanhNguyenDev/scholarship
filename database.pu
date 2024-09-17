@@ -1,0 +1,52 @@
+@startuml
+hide circle
+hide stereotype
+skinparam shadowing false
+skinparam fixCircleLabelOverlapping true
+skinparam class {
+    HeaderBackgroundColor #3d8bd4
+    BorderColor transparent
+    BackgroundColor #f2f2f2
+    FontColor #ffffff
+    FontSize 16
+    FontName sans-serif
+    AttributeFontSize 15
+    AttributeFontColor #434343
+    AttributeFontName Helvetica
+}
+
+entity "User" as user {
+  *user_id : uuid <<generated>>
+  --
+  *name : text
+  *email: text
+  phone: text
+  mother_name: text
+  fater_name: text
+  gender: enum (male, female, unknown)
+  description : text
+  created_at: datetime
+  updated_at: datetime
+  is_deleted: bool
+}
+
+entity "Parent" as parent {
+  *parent_id : uuid <<generated>>
+  --
+  *user_id : uuid <<FK>>
+   created_at: datetime
+   updated_at: datetime
+   is_deleted: bool
+}
+
+
+
+
+
+
+
+
+request_view|o--o{ appoitment
+request_view|o--o{ request_another_timeslot
+appoitment o-left-o request_another_timeslot
+@enduml
