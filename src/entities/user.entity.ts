@@ -1,22 +1,23 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm'
-
-@Entity('users')
-export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
-
-  @Column({ unique: true, type: 'varchar' })
+import { Entity, Column, Unique, OneToMany, ManyToMany, JoinTable } from 'typeorm'
+import BaseEntity from './base.entity'
+import { Role } from './role.entity'
+import { join } from 'path'
+import UserRole from './userRole.entity'
+@Entity('users', { name: 'users' })
+@Unique('idx_unique_email', ['email'])
+export class User extends BaseEntity {
+  @Column({ unique: true, type: 'varchar', length: 50 })
   email: string
 
   @Column({ type: 'text', default: null })
-  password: string
+  password: string | null
 
-  @Column({ default: true, type: 'boolean' })
+  @Column({ default: false, type: 'boolean' })
   active: boolean
 
   @Column({ default: null, type: 'text' })
   phone: string
 
-  @CreateDateColumn({ default: null, type: 'timestamptz', name: 'created_at' })
-  createdAt: string
+  @OneToMany(() => UserRole, (userRole) => userRole.user)
+  userRoles: UserRole[]
 }
