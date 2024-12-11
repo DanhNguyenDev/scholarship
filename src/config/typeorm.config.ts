@@ -15,7 +15,8 @@ export const dbdatasource: DataSourceOptions = {
   // Your Migration path
   migrations: ['dist/migrations/*.js'],
   migrationsTableName: 'migrations',
-  migrationsRun: true
+  migrationsRun: true,
+  logging: false
 }
 
 const dataSource = new DataSource(dbdatasource)
