@@ -3,8 +3,23 @@ import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { User } from 'src/entities/user.entity'
 import * as bcryptjs from 'bcryptjs'
+import * as uuid from 'uuid'
+import { InjectRepository } from '@nestjs/typeorm'
+import { InsertResult, Repository } from 'typeorm'
+import UserRole from 'src/entities/userRole.entity'
+import { Role } from 'src/entities/role.entity'
 @Injectable()
 export class UsersService {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
+
+    @InjectRepository(UserRole)
+    private readonly userRoleRepository: Repository<UserRole>
+  ) {}
   async hashPassword(password: string): Promise<string> {
     const salt = await bcryptjs.genSalt(10)
     return bcryptjs.hash(password, salt)
@@ -15,8 +30,20 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto) {
+    const isExistUser = await this.userRepository.findOne({
+      where: {
+        email: createUserDto.email
+      }
+    })
+    if (!!isExistUser) {
+      return { status: 400, message: 'Email is used' }
+    }
     const hashPassword = await this.hashPassword(createUserDto.password)
-    const user = { ...createUserDto, password: hashPassword, active: true }
+    const userId = uuid.v4()
+    const user = { ...createUserDto, password: hashPassword, active: true, id: userId, createdBy: userId, updatedBy: userId }
+    const userInserted = await this.userRepository.insert(user)
+    this.createAdmin(userInserted.generatedMaps[0] as User)
+    return { message: 'Create success' }
   }
 
   async findAll() {
@@ -52,5 +79,21 @@ export class UsersService {
 
   remove(id: number) {
     return `This action removes a #${id} user`
+  }
+
+  private async getRoleEntity(name: string): Promise<Role | null> {
+    return await this.roleRepository.findOne({
+      where: {
+        name
+      }
+    })
+  }
+
+  private async createAdmin(user: User): Promise<void> {
+    const roleAdmin = await this.getRoleEntity('ADMIN')
+    if (!roleAdmin) {
+      throw new Error('Not found role')
+    }
+    await this.userRoleRepository.insert({ user, role: roleAdmin })
   }
 }
